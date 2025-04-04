@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Books4All - Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .section {
+            margin-bottom: 30px;
+        }
+        .card {
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="/">Books4All</a>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <h1>Books4All Dashboard</h1>
+        
+        <div class="section">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h3>Matching Algorithm</h3>
+                            <form action="/run-matching-ui" method="post">
+                                <button type="submit" class="btn btn-success">Run Matching Algorithm</button>
+                            </form>
+                        </div>
+                        <div class="card-body">
+                            <p>The matching algorithm connects book donations with school requests based on:</p>
+                            <ul>
+                                <li>Book title, grade level, and language matches</li>
+                                <li>Distance between donor and school (proximity score)</li>
+                                <li>School priority based on rating and books received</li>
+                            </ul>
+                            <p>Matching creates the optimal distribution of available books to schools in need.</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3>Active Matches ({{ matches|length }})</h3>
+                        </div>
+                        <div class="card-body">
+                            {% if matches %}
+                                <table class="table table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th>ID</th>
+                                            <th>Book</th>
+                                            <th>Quantity</th>
+                                            <th>Status</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for match in matches %}
+                                        <tr>
+                                            <td>{{ match.match_id }}</td>
+                                            <td>
+                                                {% for book in donations %}
+                                                    {% if book.book_id == match.donation_id %}
+                                                        {{ book.title }}
+                                                    {% endif %}
+                                                {% endfor %}
+                                            </td>
+                                            <td>{{ match.matched_qty }}</td>
+                                            <td>
+                                                <span class="badge {% if match.status == 'Pending' %}bg-warning{% elif match.status == 'InTransit' %}bg-info{% elif match.status == 'Delivered' %}bg-success{% else %}bg-danger{% endif %}">
+                                                    {{ match.status }}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <form action="/update-status/{{ match.match_id }}" method="post" class="d-flex">
+                                                    <select name="status" class="form-select form-select-sm me-2">
+                                                        <option value="Pending" {% if match.status == 'Pending' %}selected{% endif %}>Pending</option>
+                                                        <option value="InTransit" {% if match.status == 'InTransit' %}selected{% endif %}>In Transit</option>
+                                                        <option value="Delivered" {% if match.status == 'Delivered' %}selected{% endif %}>Delivered</option>
+                                                        <option value="Cancelled" {% if match.status == 'Cancelled' %}selected{% endif %}>Cancelled</option>
+                                                    </select>
+                                                    <button type="submit" class="btn btn-sm btn-primary">Update</button>
+                                                </form>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            {% else %}
+                                <p>No matches found. Run the matching algorithm to create matches.</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="section">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3>Donors</h3>
+                        </div>
+                        <div class="card-body">
+                            <ul class="list-group">
+                                {% for donor in donors %}
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    {{ donor.name }} ({{ donor.organization }})
+                                    <a href="/view-donor/{{ donor.user_id }}" class="btn btn-sm btn-outline-primary">View Donations</a>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3>Schools</h3>
+                        </div>
+                        <div class="card-body">
+                            <ul class="list-group">
+                                {% for school in schools %}
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    {{ school.organization }} (Books: {{ school.no_of_books }}, Rating: {{ school.rating }}/5)
+                                    <a href="/view-school/{{ school.user_id }}" class="btn btn-sm btn-outline-primary">View Requests</a>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="section">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3>Active Donations</h3>
+                        </div>
+                        <div class="card-body">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Title</th>
+                                        <th>Grade Level</th>
+                                        <th>Language</th>
+                                        <th>Quantity</th>
+                                        <th>Fulfilled</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for book in donations %}
+                                    <tr>
+                                        <td>{{ book.title }}</td>
+                                        <td>{{ book.grade_level }}</td>
+                                        <td>{{ book.language }}</td>
+                                        <td>{{ book.quantity }}</td>
+                                        <td>{{ book.fulfilled_qty }} / {{ book.quantity }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3>Active Requests</h3>
+                        </div>
+                        <div class="card-body">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Title</th>
+                                        <th>Grade Level</th>
+                                        <th>Language</th>
+                                        <th>Quantity</th>
+                                        <th>Fulfilled</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for book in requests %}
+                                    <tr>
+                                        <td>{{ book.title }}</td>
+                                        <td>{{ book.grade_level }}</td>
+                                        <td>{{ book.language }}</td>
+                                        <td>{{ book.quantity }}</td>
+                                        <td>{{ book.fulfilled_qty }} / {{ book.quantity }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

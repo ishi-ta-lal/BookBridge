@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Books4All - School View</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="/">Books4All</a>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        {% if school %}
+        <div class="row mb-4">
+            <div class="col">
+                <h1>School: {{ school.organization }}</h1>
+                <p>
+                    <strong>Contact:</strong> {{ school.name }}<br>
+                    <strong>Email:</strong> {{ school.email }}<br>
+                    <strong>Phone:</strong> {{ school.phone }}<br>
+                    <strong>Address:</strong> {{ school.address }}<br>
+                    <strong>Rating:</strong> {{ school.rating }}/5<br>
+                    <strong>Books Received:</strong> {{ school.no_of_books }}
+                </p>
+                <a href="/" class="btn btn-secondary">Back to Dashboard</a>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col">
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Book Requests</h3>
+                    </div>
+                    <div class="card-body">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Title</th>
+                                    <th>Grade Level</th>
+                                    <th>Language</th>
+                                    <th>Quantity</th>
+                                    <th>Fulfilled</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for book in school.books %}
+                                {% if not book.is_donation %}
+                                <tr>
+                                    <td>{{ book.title }}</td>
+                                    <td>{{ book.grade_level }}</td>
+                                    <td>{{ book.language }}</td>
+                                    <td>{{ book.quantity }}</td>
+                                    <td>{{ book.fulfilled_qty }} / {{ book.quantity }}</td>
+                                </tr>
+                                {% endif %}
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-4">
+            <div class="col">
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Matched Books</h3>
+                    </div>
+                    <div class="card-body">
+                        {% if matches %}
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Book Title</th>
+                                    <th>Quantity</th>
+                                    <th>Donor</th>
+                                    <th>Status</th>
+                                    <th>Matched On</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for match in matches %}
+                                <tr>
+                                    <td>{{ match.book_title }}</td>
+                                    <td>{{ match.quantity }}</td>
+                                    <td>{{ match.donor_name }}</td>
+                                    <td>
+                                        <span class="badge {% if match.status == 'Pending' %}bg-warning{% elif match.status == 'InTransit' %}bg-info{% elif match.status == 'Delivered' %}bg-success{% else %}bg-danger{% endif %}">
+                                            {{ match.status }}
+                                        </span>
+                                    </td>
+                                    <td>{{ match.matched_on }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                        {% else %}
+                        <p>No matches found for this school.</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="alert alert-danger">
+            School not found.
+            <a href="/" class="btn btn-primary">Return to Dashboard</a>
+        </div>
+        {% endif %}
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
