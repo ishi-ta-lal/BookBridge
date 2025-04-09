@@ -14,7 +14,6 @@
 ```bash
 git clone https://github.com/ishi-ta-lal/BookBridge.git
 cd BookBridge
-pip install -r requirements.txt
 python db_setup.py
 python app.py
 ```
